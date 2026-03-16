@@ -65,6 +65,7 @@ export interface TranslationContext {
   glossary: Glossary;
   timeoutMs: number;
   systemPrompt: string | undefined;
+  abortSignal?: AbortSignal;
 }
 
 export interface TranslationUnit {

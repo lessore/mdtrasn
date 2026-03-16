@@ -1,7 +1,8 @@
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { TranslationCache } from './cache.js';
-import { loadConfig } from './config.js';
+import type { ConfigOverride } from './config.js';
+import { loadConfig, mergeConfig } from './config.js';
 import { collectFiles, copyAsset, isMarkdownFile, writeTextFile } from './fs-utils.js';
 import { Logger } from './logger.js';
 import { translateMarkdown } from './markdown.js';
@@ -16,6 +17,7 @@ export interface RunOptions {
   outputOverride: string | undefined;
   openAfterTranslate: boolean | undefined;
   forceRetranslate: boolean | undefined;
+  configOverride?: ConfigOverride;
 }
 
 function buildCacheNamespace(config: Awaited<ReturnType<typeof loadConfig>>['config']): string {
@@ -51,6 +53,29 @@ function siblingOutputPath(filePath: string): string {
   return path.join(parsed.dir, `${parsed.name}.zh${parsed.ext}`);
 }
 
+async function resolveFileOutputPath(
+  cwd: string,
+  sourcePath: string,
+  outputOverride: string,
+): Promise<string> {
+  const resolved = path.resolve(cwd, outputOverride);
+  try {
+    const overrideStats = await stat(resolved);
+    if (overrideStats.isDirectory()) {
+      return path.join(resolved, path.basename(siblingOutputPath(sourcePath)));
+    }
+  } catch (error) {
+    const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError.code !== 'ENOENT') {
+      throw error;
+    }
+    if (outputOverride.endsWith(path.sep) || outputOverride.endsWith('/')) {
+      return path.join(resolved, path.basename(siblingOutputPath(sourcePath)));
+    }
+  }
+  return resolved;
+}
+
 function mirrorOutputPath(root: string, outputRoot: string, sourcePath: string): string {
   const relative = path.relative(root, sourcePath);
   return path.join(outputRoot, relative);
@@ -58,7 +83,9 @@ function mirrorOutputPath(root: string, outputRoot: string, sourcePath: string):
 
 export async function runTranslation(options: RunOptions, logger = new Logger()): Promise<RunSummary> {
   const rootPath = path.resolve(options.cwd, options.pathArg);
-  const { config, glossary } = await loadConfig(options.cwd, options.configPath);
+  const loaded = await loadConfig(options.cwd, options.configPath);
+  const config = options.configOverride ? mergeConfig(loaded.config, options.configOverride) : loaded.config;
+  const { glossary } = loaded;
   const translator = createTranslator(config);
   const cachePath = path.join(options.cwd, '.mdtrans-cache', 'translations.sqlite');
   const cache = new TranslationCache(cachePath);
@@ -78,7 +105,7 @@ export async function runTranslation(options: RunOptions, logger = new Logger())
 
     if (rootStats.isFile()) {
       const outputPath = options.outputOverride
-        ? path.resolve(options.cwd, options.outputOverride)
+        ? await resolveFileOutputPath(options.cwd, rootPath, options.outputOverride)
         : siblingOutputPath(rootPath);
       const outcome = await translateOneFile(
         rootPath,

@@ -1,6 +1,7 @@
 import type { Glossary } from './types.js';
 
 const PROTECTED_PATTERNS: RegExp[] = [
+  /<\/?[_A-Za-z][A-Za-z0-9_-]*>/g,
   /https?:\/\/[^\s)]+/g,
   /(?:\.\.?\/|\/)[A-Za-z0-9._/@-]+(?:\/[A-Za-z0-9._@-]+)*/g,
   /\b[a-zA-Z0-9_.-]+\.(?:md|mdx|json|yaml|yml|ts|tsx|js|jsx|sh|zsh|toml)\b/g,

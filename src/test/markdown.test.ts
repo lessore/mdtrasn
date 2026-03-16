@@ -20,6 +20,8 @@ class MockTranslator implements TranslatorAdapter {
       units.map((unit) => [
         unit.cacheKey,
         unit.protectedText
+          .replace('Sample Doc', '示例文档')
+          .replace('Full autonomous execution from idea to working code', '从想法到可运行代码的全自主执行')
           .replace('Planning', '规划')
           .replace('Hello world', '你好，世界')
           .replace('Link title', '链接标题'),
@@ -28,7 +30,7 @@ class MockTranslator implements TranslatorAdapter {
   }
 }
 
-test('translateMarkdown preserves code blocks, frontmatter and urls', async () => {
+test('translateMarkdown preserves code blocks and translates frontmatter values', async () => {
   const cacheDir = path.join(os.tmpdir(), `mdtrans-test-${Date.now()}`);
   const cache = new TranslationCache(path.join(cacheDir, 'translations.sqlite'));
   const translator = new MockTranslator();
@@ -36,8 +38,10 @@ test('translateMarkdown preserves code blocks, frontmatter and urls', async () =
   try {
     const input = `---
 title: Sample Doc
+description: Full autonomous execution from idea to working code
 ---
 
+<Use_When>
 # Planning workflow
 
 Hello world with https://example.com and /tmp/sample.md.
@@ -45,6 +49,8 @@ Hello world with https://example.com and /tmp/sample.md.
 \`npm run build\`
 
 > Link title
+
+</Use_When>
 
 \`\`\`ts
 const message = "Hello world";
@@ -66,7 +72,10 @@ const message = "Hello world";
       forceRetranslate: false,
     });
 
-    assert.match(result.output, /title: Sample Doc/);
+    assert.match(result.output, /title: 示例文档/);
+    assert.match(result.output, /description: 从想法到可运行代码的全自主执行/);
+    assert.match(result.output, /<Use_When>/);
+    assert.match(result.output, /<\/Use_When>/);
     assert.match(result.output, /# 规划 workflow/);
     assert.match(result.output, /你好，世界 with <?https:\/\/example\.com>? and \/tmp\/sample\.md\./);
     assert.match(result.output, /`npm run build`/);

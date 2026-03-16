@@ -1,9 +1,12 @@
 .agents
 .codex
 .omx
+AGENTS.md
+AGENTS.zh.md
 dist
 node_modules
 .mdtrans-cache
+.mdtrans-ui.json
 translated-zh
 .DS_Store
 .env.local
