@@ -11,3 +11,27 @@ translated-zh
 .DS_Store
 .env.local
 .env.*.local
+
+# Desktop packaging artifacts
+release/
+out/
+dist-desktop/
+*.dmg
+*.pkg
+*.exe
+*.msi
+*.AppImage
+
+# Product/design temporary files
+docs/product/**/.cache/
+docs/product/**/tmp/
+docs/product/**/drafts/
+design/.cache/
+design/tmp/
+
+# Local logs and editor noise
+logs/
+*.log
+*.tmp
+*.swp
+.idea/
