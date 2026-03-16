@@ -1,0 +1,10 @@
+.agents
+.codex
+.omx
+dist
+node_modules
+.mdtrans-cache
+translated-zh
+.DS_Store
+.env.local
+.env.*.local

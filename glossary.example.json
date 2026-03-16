@@ -1,0 +1,18 @@
+{
+  "preserve": [
+    "Typora",
+    "skill",
+    "skills",
+    "frontmatter",
+    "Markdown",
+    "Agent",
+    "OpenAI",
+    "API"
+  ],
+  "translateAs": {
+    "prompt": "提示词",
+    "workflow": "工作流",
+    "translation": "翻译",
+    "cache": "缓存"
+  }
+}
